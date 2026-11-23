@@ -1,0 +1,129 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="action_report_fleet_trip" model="ir.actions.report">
+        <field name="name">Trip Reconciliation</field>
+        <field name="model">fleet.trip</field>
+        <field name="report_type">qweb-pdf</field>
+        <field name="report_name">mts_fleet_trip_reconciliation.report_fleet_trip</field>
+        <field name="report_file">mts_fleet_trip_reconciliation.report_fleet_trip</field>
+        <field name="print_report_name">'Trip Reconciliation - %s' % object.name</field>
+        <field name="binding_model_id" ref="model_fleet_trip"/>
+        <field name="binding_type">report</field>
+    </record>
+
+    <template id="report_fleet_trip">
+        <t t-call="web.html_container">
+            <t t-foreach="docs" t-as="trip">
+                <t t-call="web.external_layout">
+                    <div class="page">
+                        <h2>Trip Reconciliation <span t-field="trip.name"/></h2>
+                        <div class="row mt-3 mb-3">
+                            <div class="col-6">
+                                <div><strong>Vehicle:</strong> <span t-field="trip.vehicle_id"/></div>
+                                <div><strong>Driver:</strong> <span t-field="trip.driver_id"/></div>
+                                <div><strong>Trip Manager:</strong> <span t-field="trip.manager_id"/></div>
+                            </div>
+                            <div class="col-6">
+                                <div><strong>Start Time:</strong> <span t-field="trip.start_datetime"/></div>
+                                <div><strong>Starting Odometer Reading:</strong>
+                                    <span t-field="trip.start_odometer" t-options='{"widget": "float", "precision": 0}'/>
+                                    <span t-field="trip.odometer_unit"/></div>
+                                <div><strong>End Time:</strong> <span t-field="trip.end_datetime"/></div>
+                                <div><strong>Ending Odometer Reading:</strong>
+                                    <span t-field="trip.end_odometer" t-options='{"widget": "float", "precision": 0}'/>
+                                    <span t-field="trip.odometer_unit"/></div>
+                                <div><strong>Distance:</strong>
+                                    <span t-field="trip.distance" t-options='{"widget": "float", "precision": 0}'/>
+                                    <span t-field="trip.odometer_unit"/></div>
+                            </div>
+                        </div>
+
+                        <h4>Stock Fuel Expenses</h4>
+                        <table class="table table-sm">
+                            <thead>
+                                <tr><th>Product</th><th class="text-end">Quantity Issued</th><th class="text-end">Unit Cost</th><th class="text-end">Total Value</th><th>Journal Entry</th></tr>
+                            </thead>
+                            <tbody>
+                                <tr t-foreach="trip.fuel_line_ids" t-as="fuel">
+                                    <td><span t-field="fuel.product_id"/></td>
+                                    <td class="text-end"><span t-field="fuel.quantity"/> <span t-field="fuel.uom_id"/></td>
+                                    <td class="text-end"><span t-field="fuel.unit_cost"/></td>
+                                    <td class="text-end"><span t-field="fuel.total_value"/></td>
+                                    <td><span t-if="fuel.move_id" t-field="fuel.move_id.name"/><span t-else="">Not posted</span></td>
+                                </tr>
+                                <tr t-if="not trip.fuel_line_ids"><td colspan="5" class="text-muted">No fuel issued.</td></tr>
+                            </tbody>
+                            <tfoot>
+                                <tr><td colspan="3" class="text-end"><strong>Total Fuel</strong></td>
+                                    <td class="text-end"><strong><span t-field="trip.fuel_amount"/></strong></td><td/></tr>
+                            </tfoot>
+                        </table>
+
+                        <h4 class="mt-3">Other Fuel Expenses</h4>
+                        <table class="table table-sm">
+                            <thead>
+                                <tr><th>Date</th><th>Description</th><th>Employee</th><th>Paid by</th><th>Status</th><th class="text-end">Amount</th></tr>
+                            </thead>
+                            <tbody>
+                                <tr t-foreach="trip.other_fuel_expense_ids" t-as="fx">
+                                    <td><span t-field="fx.date"/></td>
+                                    <td><span t-field="fx.name"/></td>
+                                    <td><span t-field="fx.employee_id"/></td>
+                                    <td><span t-field="fx.payment_mode"/></td>
+                                    <td><span t-field="fx.state"/></td>
+                                    <td class="text-end"><span t-field="fx.total_amount"/></td>
+                                </tr>
+                                <tr t-if="not trip.other_fuel_expense_ids"><td colspan="6" class="text-muted">No other fuel expenses.</td></tr>
+                            </tbody>
+                            <tfoot>
+                                <tr><td colspan="5" class="text-end"><strong>Total Other Fuel</strong></td>
+                                    <td class="text-end"><strong><span t-field="trip.other_fuel_amount"/></strong></td></tr>
+                            </tfoot>
+                        </table>
+
+                        <h4 class="mt-3">Other Expenses</h4>
+                        <table class="table table-sm">
+                            <thead>
+                                <tr><th>Date</th><th>Description</th><th>Employee</th><th>Paid by</th><th>Status</th><th class="text-end">Amount</th></tr>
+                            </thead>
+                            <tbody>
+                                <tr t-foreach="trip.expense_line_ids" t-as="exp">
+                                    <td><span t-field="exp.date"/></td>
+                                    <td><span t-field="exp.name"/></td>
+                                    <td><span t-field="exp.employee_id"/></td>
+                                    <td><span t-field="exp.payment_mode"/></td>
+                                    <td><span t-field="exp.state"/></td>
+                                    <td class="text-end"><span t-field="exp.total_amount"/></td>
+                                </tr>
+                            </tbody>
+                        </table>
+                        <div class="row"><div class="col-6 ms-auto">
+                            <table class="table table-sm">
+                                <tr><td>Other expenses - company-paid</td><td class="text-end"><span t-field="trip.company_paid_amount"/></td></tr>
+                                <tr><td>Other expenses - employee-paid</td><td class="text-end"><span t-field="trip.employee_paid_amount"/></td></tr>
+                                <tr><td>Other expenses total</td><td class="text-end"><span t-field="trip.total_expense"/></td></tr>
+                                <tr><td>Stock fuel</td><td class="text-end"><span t-field="trip.fuel_amount"/></td></tr>
+                                <tr><td>Other fuel</td><td class="text-end"><span t-field="trip.other_fuel_amount"/></td></tr>
+                                <tr><td>Total fuel</td><td class="text-end"><span t-field="trip.total_fuel_amount"/></td></tr>
+                                <tr><td><strong>Total Trip Cost</strong></td><td class="text-end"><strong><span t-field="trip.total_cost"/></strong></td></tr>
+                            </table>
+                        </div></div>
+
+                        <h4 class="mt-3">Customer Transfers Carried</h4>
+                        <table class="table table-sm">
+                            <thead><tr><th>Transfer</th><th>Customer</th><th>Batch</th><th>Status</th></tr></thead>
+                            <tbody>
+                                <tr t-foreach="trip.picking_ids" t-as="pick">
+                                    <td><span t-field="pick.name"/></td>
+                                    <td><span t-field="pick.partner_id"/></td>
+                                    <td><span t-field="pick.batch_id"/></td>
+                                    <td><span t-field="pick.state"/></td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </t>
+            </t>
+        </t>
+    </template>
+</odoo>

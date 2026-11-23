@@ -1,0 +1,260 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="fleet_trip_view_list" model="ir.ui.view">
+        <field name="name">fleet.trip.list</field>
+        <field name="model">fleet.trip</field>
+        <field name="arch" type="xml">
+            <list decoration-info="state == 'in_progress'" decoration-muted="state == 'cancelled'">
+                <field name="name"/>
+                <field name="date"/>
+                <field name="vehicle_id"/>
+                <field name="driver_id" widget="many2one_avatar_employee"/>
+                <field name="manager_id" widget="many2one_avatar_user"/>
+                <field name="start_odometer" optional="hide"/>
+                <field name="end_odometer" optional="hide"/>
+                <field name="distance" sum="Total"/>
+                <field name="fuel_amount" optional="hide" sum="Total"/>
+                <field name="other_fuel_amount" optional="hide" sum="Total"/>
+                <field name="total_fuel_amount" sum="Total"/>
+                <field name="total_expense" sum="Total"/>
+                <field name="total_cost" sum="Total"/>
+                <field name="company_paid_amount" optional="hide" sum="Total"/>
+                <field name="employee_paid_amount" optional="hide" sum="Total"/>
+                <field name="state" widget="badge" decoration-success="state == 'done'"
+                       decoration-info="state == 'in_progress'"/>
+                <field name="company_id" column_invisible="True"/>
+                <field name="currency_id" column_invisible="True"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="fleet_trip_view_form" model="ir.ui.view">
+        <field name="name">fleet.trip.form</field>
+        <field name="model">fleet.trip</field>
+        <field name="arch" type="xml">
+            <form>
+                <header>
+                    <button name="action_start" string="Start Trip" type="object" class="btn-primary"
+                            invisible="state != 'draft' or not is_manager"/>
+                    <button name="action_end" string="End Trip" type="object" class="btn-primary"
+                            invisible="state != 'in_progress' or not is_manager"
+                            confirm="Ending the trip will post all approved linked expenses. Continue?"/>
+                    <button name="action_cancel" string="Cancel" type="object"
+                            invisible="state not in ('draft', 'in_progress') or not is_manager"/>
+                    <button name="action_reset_draft" string="Back to Draft" type="object"
+                            invisible="state != 'cancelled' or not is_manager"/>
+                    <field name="state" widget="statusbar" statusbar_visible="draft,in_progress,done"/>
+                </header>
+                <sheet>
+                    <field name="is_manager" invisible="1"/>
+                    <field name="company_id" invisible="1"/>
+                    <field name="currency_id" invisible="1"/>
+                    <div class="oe_button_box" name="button_box">
+                        <button name="action_view_expenses" type="object" class="oe_stat_button" icon="fa-money">
+                            <field name="expense_count" widget="statinfo" string="Other Expenses"/>
+                        </button>
+                        <button name="action_view_fuel_expenses" type="object" class="oe_stat_button" icon="fa-tint">
+                            <field name="other_fuel_count" widget="statinfo" string="Other Fuel"/>
+                        </button>
+                        <button name="action_view_pickings" type="object" class="oe_stat_button" icon="fa-truck">
+                            <field name="picking_count" widget="statinfo" string="Transfers"/>
+                        </button>
+                    </div>
+                    <div class="oe_title">
+                        <h1><field name="name"/></h1>
+                    </div>
+                    <group>
+                        <group string="Trip">
+                            <field name="date" readonly="state != 'draft'"/>
+                            <field name="vehicle_id" readonly="state != 'draft'"/>
+                            <field name="driver_id" readonly="state in ('done', 'cancelled')"
+                                   widget="many2one_avatar_employee"/>
+                            <field name="manager_id" readonly="state in ('done', 'cancelled')"
+                                   widget="many2one_avatar_user"/>
+                        </group>
+                        <group string="Mileage &amp; Time">
+                            <field name="odometer_unit" invisible="1"/>
+                            <field name="start_odometer" readonly="state != 'draft'"/>
+                            <field name="start_datetime" readonly="state in ('done', 'cancelled') or not is_manager"/>
+                            <field name="end_odometer" readonly="state != 'in_progress' or not is_manager"/>
+                            <field name="end_datetime" readonly="state in ('done', 'cancelled') or not is_manager"/>
+                            <field name="distance"/>
+                            <field name="duration" widget="float_time"/>
+                        </group>
+                    </group>
+                    <group string="Cost Summary" class="o_group_col_6">
+                        <field name="fuel_amount"/>
+                        <field name="other_fuel_amount"/>
+                        <field name="total_fuel_amount"/>
+                        <field name="total_expense"/>
+                        <field name="total_cost" class="fw-bold"/>
+                        <field name="cost_per_distance"/>
+                    </group>
+                    <notebook>
+                        <page string="Fuel Expenses" name="fuel">
+                            <separator string="Stock Fuel Expenses"/>
+                            <field name="fuel_line_ids" readonly="state in ('done', 'cancelled') or not is_manager">
+                                <list editable="bottom">
+                                    <field name="state" column_invisible="True"/>
+                                    <field name="currency_id" column_invisible="True"/>
+                                    <field name="product_id" readonly="state == 'posted'"
+                                           options="{'no_create': True}"/>
+                                    <field name="quantity" readonly="state == 'posted'"/>
+                                    <field name="uom_id"/>
+                                    <field name="unit_cost"/>
+                                    <field name="total_value" sum="Total"/>
+                                    <field name="state" widget="badge" decoration-success="state == 'posted'"/>
+                                    <field name="location_id" optional="show"/>
+                                    <field name="move_id" optional="show"/>
+                                    <button name="action_open_post_wizard" type="object" string="Post Entry"
+                                            icon="fa-check-circle" class="text-success"
+                                            invisible="state == 'posted' or not parent.is_manager"/>
+                                    <button name="action_view_move" type="object" string="View Entry"
+                                            icon="fa-external-link" invisible="state != 'posted'"/>
+                                </list>
+                            </field>
+                            <div class="text-muted">
+                                Only the Trip Manager can add fuel. Unit cost comes from the product and cannot
+                                be edited. Use the check button on a line to issue the fuel from stock and post its journal entry.
+                            </div>
+                            <separator string="Other Fuel Expenses"/>
+                            <field name="other_fuel_expense_ids" readonly="1">
+                                <list>
+                                    <field name="date"/>
+                                    <field name="name"/>
+                                    <field name="employee_id"/>
+                                    <field name="product_id"/>
+                                    <field name="quantity"/>
+                                    <field name="payment_mode"/>
+                                    <field name="total_amount" sum="Total"/>
+                                    <field name="state" widget="badge"/>
+                                    <field name="currency_id" column_invisible="True"/>
+                                </list>
+                            </field>
+                            <div class="text-muted">
+                                Expenses linked to this trip with "Is a Fuel Expense" turned on appear here
+                                automatically. They are posted from the Expenses app and do not use stock.
+                            </div>
+                        </page>
+                        <page string="Other Expenses" name="expenses">
+                            <field name="expense_line_ids" readonly="1">
+                                <list>
+                                    <field name="date"/>
+                                    <field name="name"/>
+                                    <field name="employee_id"/>
+                                    <field name="payment_mode"/>
+                                    <field name="total_amount" sum="Total"/>
+                                    <field name="state" widget="badge"/>
+                                    <field name="currency_id" column_invisible="True"/>
+                                </list>
+                            </field>
+                            <group class="oe_subtotal_footer">
+                                <field name="company_paid_amount"/>
+                                <field name="employee_paid_amount"/>
+                                <field name="total_expense" class="oe_subtotal_footer_separator"/>
+                            </group>
+                            <div class="text-muted">
+                                Expenses are linked from the expense form by an Expense Approver
+                                (tick "Trip Expense", then pick this trip).
+                            </div>
+                        </page>
+                        <page string="Batch Transfers" name="batches">
+                            <field name="batch_ids" readonly="state in ('done', 'cancelled')">
+                                <list>
+                                    <field name="name"/>
+                                    <field name="scheduled_date"/>
+                                    <field name="user_id"/>
+                                    <field name="state" widget="badge"/>
+                                </list>
+                            </field>
+                            <field name="picking_ids" readonly="1">
+                                <list>
+                                    <field name="name"/>
+                                    <field name="partner_id"/>
+                                    <field name="origin"/>
+                                    <field name="state" widget="badge"/>
+                                </list>
+                            </field>
+                        </page>
+                        <page string="Notes" name="notes">
+                            <field name="notes"/>
+                        </page>
+                    </notebook>
+                </sheet>
+                <chatter/>
+            </form>
+        </field>
+    </record>
+
+    <record id="fleet_trip_view_search" model="ir.ui.view">
+        <field name="name">fleet.trip.search</field>
+        <field name="model">fleet.trip</field>
+        <field name="arch" type="xml">
+            <search>
+                <field name="name"/>
+                <field name="vehicle_id"/>
+                <field name="driver_id"/>
+                <field name="manager_id"/>
+                <filter name="my_trips" string="My Trips" domain="[('manager_id', '=', uid)]"/>
+                <filter name="in_progress" string="In Progress" domain="[('state', '=', 'in_progress')]"/>
+                <filter name="done" string="Done" domain="[('state', '=', 'done')]"/>
+                <group>
+                    <filter name="group_vehicle" string="Vehicle" context="{'group_by': 'vehicle_id'}"/>
+                    <filter name="group_driver" string="Driver" context="{'group_by': 'driver_id'}"/>
+                    <filter name="group_month" string="Month" context="{'group_by': 'date:month'}"/>
+                    <filter name="group_state" string="Status" context="{'group_by': 'state'}"/>
+                </group>
+            </search>
+        </field>
+    </record>
+
+    <record id="fleet_trip_view_pivot" model="ir.ui.view">
+        <field name="name">fleet.trip.pivot</field>
+        <field name="model">fleet.trip</field>
+        <field name="arch" type="xml">
+            <pivot string="Trip Reconciliation">
+                <field name="vehicle_id" type="row"/>
+                <field name="date" interval="month" type="col"/>
+                <field name="distance" type="measure"/>
+                <field name="company_paid_amount" type="measure"/>
+                <field name="employee_paid_amount" type="measure"/>
+                <field name="total_expense" type="measure"/>
+                <field name="fuel_amount" type="measure"/>
+                <field name="total_fuel_amount" type="measure"/>
+                <field name="total_cost" type="measure"/>
+            </pivot>
+        </field>
+    </record>
+
+    <record id="fleet_trip_view_graph" model="ir.ui.view">
+        <field name="name">fleet.trip.graph</field>
+        <field name="model">fleet.trip</field>
+        <field name="arch" type="xml">
+            <graph string="Trip Expenses" type="bar">
+                <field name="vehicle_id"/>
+                <field name="total_cost" type="measure"/>
+            </graph>
+        </field>
+    </record>
+
+    <record id="fleet_trip_action" model="ir.actions.act_window">
+        <field name="name">Trips</field>
+        <field name="res_model">fleet.trip</field>
+        <field name="view_mode">list,form,pivot,graph</field>
+        <field name="context">{'search_default_my_trips': 0}</field>
+    </record>
+
+    <record id="fleet_trip_report_action" model="ir.actions.act_window">
+        <field name="name">Trip Reconciliation</field>
+        <field name="res_model">fleet.trip</field>
+        <field name="view_mode">pivot,graph,list,form</field>
+        <field name="domain">[('state', '=', 'done')]</field>
+    </record>
+
+    <menuitem id="menu_fleet_trip" name="Trips" parent="fleet.menu_root" sequence="3"
+              groups="group_fleet_trip_user"/>
+    <menuitem id="menu_fleet_trip_all" name="Trips" parent="menu_fleet_trip"
+              action="fleet_trip_action" sequence="1"/>
+    <menuitem id="menu_fleet_trip_report" name="Trip Reconciliation" parent="fleet.menu_fleet_reporting"
+              action="fleet_trip_report_action" sequence="30" groups="group_fleet_trip_user"/>
+</odoo>

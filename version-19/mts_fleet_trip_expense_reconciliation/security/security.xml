@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="group_fleet_trip_user" model="res.groups">
+        <field name="name">Fleet Trips: User</field>
+        <field name="implied_ids" eval="[(4, ref('fleet.fleet_group_user'))]"/>
+    </record>
+    <record id="group_fleet_trip_admin" model="res.groups">
+        <field name="name">Fleet Trips: Administrator</field>
+        <field name="implied_ids" eval="[(4, ref('group_fleet_trip_user'))]"/>
+    </record>
+
+    <record id="fleet_trip_company_rule" model="ir.rule">
+        <field name="name">Fleet Trip: multi-company</field>
+        <field name="model_id" ref="model_fleet_trip"/>
+        <field name="domain_force">['|', ('company_id', '=', False), ('company_id', 'in', company_ids)]</field>
+    </record>
+
+    <record id="fleet_trip_fuel_company_rule" model="ir.rule">
+        <field name="name">Fleet Trip Fuel: multi-company</field>
+        <field name="model_id" ref="model_fleet_trip_fuel"/>
+        <field name="domain_force">['|', ('company_id', '=', False), ('company_id', 'in', company_ids)]</field>
+    </record>
+</odoo>

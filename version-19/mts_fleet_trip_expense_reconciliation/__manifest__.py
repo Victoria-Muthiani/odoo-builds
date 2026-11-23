@@ -1,0 +1,21 @@
+{
+    'name': 'Fleet Trip & Expense Reconciliation',
+    'version': '19.0.1.0.0',
+    'category': 'Human Resources/Fleet',
+    'summary': 'Trips per vehicle, linked expenses, batch transfers and reconciliation report',
+    'depends': ['fleet', 'hr_expense', 'account', 'stock_account', 'stock_fleet', 'stock_picking_batch'],
+    'data': [
+        'security/security.xml',
+        'security/ir.model.access.csv',
+        'data/sequence.xml',
+        'data/location.xml',
+        'data/config_parameter.xml',
+        'views/fleet_trip_views.xml',
+        'views/fleet_trip_fuel_wizard_views.xml',
+        'views/stock_picking_batch_views.xml',
+        'views/hr_expense_views.xml',
+        'report/fleet_trip_report.xml',
+    ],
+    'application': False,
+    'license': 'LGPL-3',
+}

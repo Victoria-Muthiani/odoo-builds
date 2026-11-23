@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="hr_expense_view_form_trip" model="ir.ui.view">
+        <field name="name">hr.expense.form.trip</field>
+        <field name="model">hr.expense</field>
+        <field name="inherit_id" ref="hr_expense.hr_expense_view_form"/>
+        <field name="arch" type="xml">
+            <!-- Paid By section: phone (everyone) + M-Pesa reference (approvers) -->
+            <xpath expr="//div[@id='payment_mode']" position="after">
+                <field name="phone" readonly="not is_editable"/>
+                <field name="mpesa_reference" groups="hr_expense.group_hr_expense_team_approver"
+                       readonly="state in ('posted', 'in_payment', 'paid', 'refused')"/>
+            </xpath>
+
+            <!-- Transaction charges, then trip link -->
+            <xpath expr="//field[@name='manager_id']" position="after">
+                <field name="has_transaction_charges" groups="hr_expense.group_hr_expense_team_approver"
+                       readonly="state in ('posted', 'in_payment', 'paid', 'refused')"/>
+                <field name="transaction_amount" groups="hr_expense.group_hr_expense_team_approver"
+                       invisible="not has_transaction_charges" required="has_transaction_charges"
+                       readonly="state in ('posted', 'in_payment', 'paid', 'refused')"/>
+                <field name="transaction_account_id" groups="hr_expense.group_hr_expense_team_approver"
+                       invisible="not has_transaction_charges" required="has_transaction_charges"
+                       readonly="state in ('posted', 'in_payment', 'paid', 'refused')"
+                       options="{'no_create': True}"/>
+                <field name="is_trip_expense" groups="hr_expense.group_hr_expense_team_approver"
+                       readonly="state in ('posted', 'in_payment', 'paid', 'refused')"/>
+                <field name="is_fuel_expense" widget="boolean_toggle"
+                       groups="hr_expense.group_hr_expense_team_approver"
+                       invisible="not is_trip_expense"
+                       readonly="state in ('posted', 'in_payment', 'paid', 'refused')"/>
+                <field name="trip_id" groups="hr_expense.group_hr_expense_team_approver"
+                       invisible="not is_trip_expense" required="is_trip_expense"
+                       readonly="state in ('posted', 'in_payment', 'paid', 'refused')"
+                       options="{'no_create': True}"/>
+            </xpath>
+
+            <!-- Editable unit cost for products flagged "Editable Unit Cost on Expenses" -->
+            <xpath expr="//field[@name='price_unit'][@required='1']" position="before">
+                <field name="can_edit_unit_cost" invisible="1"/>
+                <field name="unit_cost_overridden" invisible="1"/>
+            </xpath>
+            <xpath expr="//field[@name='price_unit'][@required='1']" position="attributes">
+                <attribute name="readonly">not can_edit_unit_cost</attribute>
+            </xpath>
+        </field>
+    </record>
+
+    <record id="product_template_form_expense_cost_editable" model="ir.ui.view">
+        <field name="name">product.template.form.expense.cost.editable</field>
+        <field name="model">product.template</field>
+        <field name="inherit_id" ref="hr_expense.view_product_hr_expense_form"/>
+        <field name="arch" type="xml">
+            <xpath expr="//field[@name='can_be_expensed']/.." position="after">
+                <span class="d-inline-flex" invisible="not can_be_expensed">
+                    <field name="expense_cost_editable"/>
+                    <label for="expense_cost_editable"/>
+                </span>
+            </xpath>
+        </field>
+    </record>
+</odoo>

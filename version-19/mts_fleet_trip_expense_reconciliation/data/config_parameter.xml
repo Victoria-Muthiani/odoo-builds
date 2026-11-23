@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo noupdate="1">
+    <record id="param_low_loading_threshold" model="ir.config_parameter">
+        <field name="key">mts_fleet_trip_reconciliation.low_loading_threshold</field>
+        <field name="value">90</field>
+    </record>
+</odoo>

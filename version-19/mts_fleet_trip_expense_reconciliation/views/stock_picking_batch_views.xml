@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="stock_picking_batch_form_low_loading" model="ir.ui.view">
+        <field name="name">stock.picking.batch.form.low.loading</field>
+        <field name="model">stock.picking.batch</field>
+        <field name="inherit_id" ref="stock_picking_batch.stock_picking_batch_form"/>
+        <field name="arch" type="xml">
+            <xpath expr="//header" position="after">
+                <field name="low_loading" invisible="1"/>
+                <div class="alert alert-warning mb-0" role="alert" invisible="not low_loading">
+                    <i class="fa fa-exclamation-triangle me-1"/><field name="low_loading_message" nolabel="1" class="oe_inline"/>
+                </div>
+            </xpath>
+        </field>
+    </record>
+</odoo>

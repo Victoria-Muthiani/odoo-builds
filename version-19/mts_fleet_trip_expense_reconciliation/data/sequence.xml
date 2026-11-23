@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo noupdate="1">
+    <record id="seq_fleet_trip" model="ir.sequence">
+        <field name="name">Fleet Trip</field>
+        <field name="code">fleet.trip</field>
+        <field name="prefix">TRIP/%(year)s/</field>
+        <field name="padding">4</field>
+    </record>
+</odoo>

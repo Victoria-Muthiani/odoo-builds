@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo noupdate="1">
+    <!-- Destination of issued fuel. Deliberately has NO "Stock Valuation Account": the accounting
+         entry is posted by the module using the expense account set on the fuel product. -->
+    <record id="location_fleet_fuel_consumption" model="stock.location">
+        <field name="name">Fleet Fuel Consumption</field>
+        <field name="usage">inventory</field>
+        <field name="company_id" eval="False"/>
+    </record>
+</odoo>

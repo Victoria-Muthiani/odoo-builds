@@ -1,0 +1,5 @@
+id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
+access_fleet_trip_user,fleet.trip user,model_fleet_trip,group_fleet_trip_user,1,1,1,0
+access_fleet_trip_admin,fleet.trip admin,model_fleet_trip,group_fleet_trip_admin,1,1,1,1
+access_fleet_trip_fuel_user,fleet.trip.fuel user,model_fleet_trip_fuel,group_fleet_trip_user,1,1,1,1
+access_fleet_trip_fuel_post_wizard_user,fleet.trip.fuel.post.wizard user,model_fleet_trip_fuel_post_wizard,group_fleet_trip_user,1,1,1,1
